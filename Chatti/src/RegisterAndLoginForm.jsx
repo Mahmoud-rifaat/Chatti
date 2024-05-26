@@ -2,14 +2,16 @@ import axios from "axios";
 import { useContext, useState } from "react";
 import { UserContext } from "./UserContext";
 
-export default function Register() {
+export default function RegisterAndLoginForm() {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [isLoginOrRegister, setIsLoginOrRegister] = useState('register');
     const { setId, setUsername: setLoggedInUsername } = useContext(UserContext);
 
-    async function register(ev) {
+    async function handleSubmit(ev) {
         ev.preventDefault();
-        const { data } = await axios.post('/register', {
+        const url = isLoginOrRegister === 'register' ? 'register' : 'login';
+        const { data } = await axios.post(`${url}`, {
             username, password
         });
         setLoggedInUsername(username);
@@ -18,7 +20,7 @@ export default function Register() {
 
     return (
         <div className="bg-blue-50 h-screen flex items-center">
-            <form className="w-64 mx-auto mb-12" onSubmit={register}>
+            <form className="w-64 mx-auto mb-12" onSubmit={handleSubmit}>
                 <input
                     type="text"
                     placeholder="username"
@@ -34,8 +36,26 @@ export default function Register() {
                     onChange={(ev) => setPassword(ev.target.value)}
                 />
                 <button className="bg-blue-500 text-white block w-full rounded-sm p-2">
-                    Register
+                    {isLoginOrRegister === 'register' ? 'Register' : 'Login'}
                 </button>
+                <div className="text-center mt-2">
+                    {isLoginOrRegister === 'register' && (
+                        <div>
+                            Already a member?
+                            <button className="ml-1" onClick={() => setIsLoginOrRegister('login')}>
+                                Login here
+                            </button>
+                        </div>
+                    )}
+                    {isLoginOrRegister === 'login' && (
+                        <div>
+                            Don't have an account?
+                            <button className="ml-1" onClick={() => setIsLoginOrRegister('register')}>
+                                Register
+                            </button>
+                        </div>
+                    )}
+                </div>
             </form>
         </div>
     );
