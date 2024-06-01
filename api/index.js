@@ -35,7 +35,7 @@ app.get('/profile', (req, res) => {
     const token = req.cookies?.token;
     if (token) {
         jwt.verify(token, jwtSecret, {}, (err, userData) => {
-            if (err) throw err;
+            if (err) res.json(err.message);
             res.json(userData);
         });
     }
@@ -51,25 +51,32 @@ app.post('/login', async (req, res) => {
         const passOk = bcrypt.compareSync(password, foundUser.password);
         if (passOk) {
             jwt.sign({ userId: foundUser._id, username: foundUser.username }, jwtSecret, {}, (err, token) => {
-                if (err) throw err;
+                if (err) res.json(err.message);
                 res.cookie('token', token, { httpOnly: true, sameSite: 'None', secure: true }).status(201).json({ id: createdUser._id });
             })
         }
     }
 })
 
+app.post('/logout', (req, res) => {
+    res.cookie('token', '', { sameSite: 'none', secure: true }).json('ok');
+})
+
 app.post("/register", async (req, res) => {
     const { username, password } = req.body;
     try {
         const hashedPassword = bcrypt.hashSync(password, bcryptSalt);
-        const createdUser = await User.create({ username, password: hashedPassword });
+        const createdUser = await User.create({
+            username,
+            password: hashedPassword
+        });
         jwt.sign({ userId: createdUser._id, username }, jwtSecret, {}, (err, token) => {
             if (err) throw err;
             res.cookie('token', token, { httpOnly: true, sameSite: 'None', secure: true }).status(201).json({ id: createdUser._id });
         });
     } catch (err) {
         res.status(400).json('User creation failed!')
-        throw err;
+        // throw err;
     }
 })
 
